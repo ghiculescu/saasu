@@ -1,30 +1,29 @@
 module Saasu
   
-  class Invoice < Base
+  class InvoiceListItem < Base
     
-    fields "uid"                      => :integer,
+    fields "invoiceUid"                => :integer,
            "lastUpdatedUid"            => :string,
+           "ccy"                       => :string,
+           "autoPopulateFXRate"        => :boolean,
+           "fcToBcFxRate"              => :decimal,
            "transactionType"           => :string,
-           "date"                      => :date,
-           "dueOrExpiryDate"           => :date,
+           "invoiceDate"               => :date,
            "utcFirstCreated"           => :date,
            "utcLastModified"           => :date,
            "summary"                   => :string,
            "invoiceNumber"             => :string,
            "purchaseOrderNumber"       => :string,
            "dueDate"                   => :date,
-           "ccy"                       => :string,
-           "autoPopulateFxRate"        => :boolean,
-           "fcToBcFxRate"              => :decimal,
-           "paymentCount"              => :integer,
            "totalAmountInclTax"        => :decimal,
+           "paymentCount"              => :integer,
+           "totalAmountPaid"           => :interger,
            "amountOwed"                => :decimal,
            "paidStatus"                => :string,
            "requiresFollowUp"          => :boolean,
            "isSent"                    => :boolean,
-           "layout"                    => :string,
-           "status"                    => :string,
-           "typeUid"                   => :string,
+           "invoiceLayout"             => :string,
+           "invoiceStatus"             => :string,
            "contactUid"                => :integer,
            "contactGivenName"          => :string,
            "contactFamilyName"         => :string,
@@ -33,9 +32,10 @@ module Saasu
            "shipToContactFirstname"    => :string,
            "shipToContactLastName"     => :string,
            "shipToContactOrganisation" => :string,
-           "tags"                      => :array,
-           "totalAmountPaid"           => :decimal,
-           "invoiceItems"              => :array
+           "tags"                      => :array
+      
+      defaults :query_options => { :transaction_type => "s" }
   end
   
 end
+

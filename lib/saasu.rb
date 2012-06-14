@@ -9,3 +9,4 @@ require "active_support/inflector"
 
 require "saasu/base"
 require "saasu/invoice"
+require "saasu/invoice_list_item"

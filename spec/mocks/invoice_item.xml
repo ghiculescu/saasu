@@ -26,7 +26,7 @@
   <contactFamilyName>jones</contactFamilyName>
   <contactOrganisationName/>
   <shipToContactUid/>
-  <shipToContactGivenName/>
+  <shipToContactFirstname/>
   <shipToContactLastName/>
   <shipToContactOrganisation/>
   <tags>urgent,important</tags>

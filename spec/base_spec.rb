@@ -13,42 +13,42 @@ describe "Saasu::Base" do
   describe "fields" do
     
     before do
-      file     = open(File.join(File.dirname(__FILE__), "mocks", "invoice_item.xml"))
-      xml      = Nokogiri::XML(file).css("invoiceListItem")
-      @invoice = Saasu::Invoice.new(xml)
+      file = open(File.join(File.dirname(__FILE__), "mocks", "invoice_item.xml"))
+      xml = Nokogiri::XML(file).css("invoiceListItem")
+      @invoiceListItem = Saasu::InvoiceListItem.new(xml)
     end
     
     it "should define accessors for all fields listed" do
-      @invoice.methods.should include("uid=")
-      @invoice.methods.should include("uid")
+      @invoiceListItem.methods.should include(:invoice_uid=)
+      @invoiceListItem.methods.should include(:invoice_uid)
     end
     
     it "should cast any field listed as a decimal to a float" do
-      @invoice.amount_owed.should be_an_instance_of(Float)
+      @invoiceListItem.amount_owed.should be_an_instance_of(Float)
     end
     
     it "should cast any field listed as a date to a date" do
-      @invoice.date.should be_an_instance_of(Date)
+      @invoiceListItem.invoice_date.should be_an_instance_of(Date)
     end
     
     it "should cast any field listed as a integer to a integer" do
-      @invoice.uid.should be_an_instance_of(Fixnum)
+      @invoiceListItem.invoice_uid.should be_an_instance_of(Fixnum)
     end
     
     describe "boolean fields" do
       
       it "should cast any field listed as a boolean, with a value of true as true" do
-        @invoice.is_sent.should eql(true)
+        @invoiceListItem.is_sent.should eql(true)
       end
     
       it "should cast any field listed as a boolean, with a value of false as false" do
-        @invoice.requires_follow_up.should eql(false)
+        @invoiceListItem.requires_follow_up.should eql(false)
       end
       
     end
     
     it "should cast any field listed as a array to a array" do
-      @invoice.tags.should be_an_instance_of(Array)
+      @invoiceListItem.tags.should be_an_instance_of(Array)
     end
       
   end
