@@ -4,7 +4,10 @@ describe Saasu::InvoiceResponse do
 
   before(:all) do
     file = open(File.join(File.dirname(__FILE__), "mocks", "invoice_response.xml"))
-    @invoiceResponse = Saasu::InvoiceResponse.new(Nokogiri::XML(file))
+    doc = Nokogiri::XML(file) do |config|
+      config.options = Nokogiri::XML::ParseOptions::NOBLANKS
+    end
+    @invoiceResponse = Saasu::InvoiceResponse.new(doc.root)
   end
 
   subject { @invoiceResponse }

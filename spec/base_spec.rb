@@ -13,8 +13,8 @@ describe "Saasu::Base" do
   describe "fields" do
     
     before do
-      file = open(File.join(File.dirname(__FILE__), "mocks", "invoice_item.xml"))
-      xml = Nokogiri::XML(file).css("invoiceListItem")
+      #file = open(File.join(File.dirname(__FILE__), "mocks", "invoice_item.xml"))
+      #xml = Nokogiri::XML(file).css("invoiceListItem")
       #@invoiceListItem = Saasu::InvoiceListItem.new(xml)
     end
     

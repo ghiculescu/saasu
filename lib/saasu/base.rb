@@ -6,7 +6,7 @@ module Saasu
     
     def initialize(xml)
 
-      node = xml.root
+      node = xml
 
       klass = self.class.name.split("::")[1].downcase
 
@@ -16,6 +16,7 @@ module Saasu
         node.attributes.each do |attr|
           send("#{attr[1].name.underscore.sub(/#{klass}_/, "")}=", 
                             attr[1].text)
+
         end
       end
 
@@ -26,13 +27,20 @@ module Saasu
       node.children.each do |child|
         method_name = child.name.underscore.sub(/#{klass}_/, "")
         if !child.text?
-          # [CHRISK] attributes found here signifies a sub entity type,
-          # pass in xml which allows entity to create itself
-          if !child.attributes.empty?
-            send("#{method_name}=", Nokogiri::XML(child.to_xml()))
-          else
+          # [CHRISK] further children found here signifies a sub 
+          # type. Pass in xml which allows entity to create itself
+          # Nokogiri is wierd, why is inner text counted as child? 
+
+          if child.children.size == 1 && child.child.text?
             send("#{child.name.underscore.sub(/#{klass}_/, "")}=", child.children.first.text) unless child.children.first.nil?
+
+            puts "#{child.name} setting "
+          else
+            puts "#{self.class.name} sending child data\n #{child.to_s}\n to #{method_name}"
+            send("#{method_name}=", child)
           end
+        else
+          puts "should be setting #{child.content}"
         end
       end
     end
@@ -166,7 +174,10 @@ module Saasu
           when :array
             class_eval <<-END
               def #{m}=(v)
-                @#{m} = v.split(",")
+                @#{m} = v.children.to_a().map {|node| 
+                  puts "node \#{node.node_name()} data \#{node.to_s()}"
+                  Saasu.const_get(node.node_name()).new(node)
+                }
               end
             END
           else
