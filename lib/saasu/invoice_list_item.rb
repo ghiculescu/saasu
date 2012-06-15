@@ -17,7 +17,7 @@ module Saasu
            "dueDate"                   => :date,
            "totalAmountInclTax"        => :decimal,
            "paymentCount"              => :integer,
-           "totalAmountPaid"           => :interger,
+           "totalAmountPaid"           => :integer,
            "amountOwed"                => :decimal,
            "paidStatus"                => :string,
            "requiresFollowUp"          => :boolean,

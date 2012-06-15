@@ -8,5 +8,8 @@ require "nokogiri"
 require "active_support/inflector"
 
 require "saasu/base"
+require "saasu/entity"
+require "saasu/transaction"
 require "saasu/invoice"
-require "saasu/invoice_list_item"
+require "saasu/invoice_response"
+

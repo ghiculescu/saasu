@@ -1,41 +1,19 @@
 module Saasu
   
-  class Invoice < Base
-    
-    fields "uid"                      => :integer,
-           "lastUpdatedUid"            => :string,
-           "transactionType"           => :string,
-           "date"                      => :date,
-           "dueOrExpiryDate"           => :date,
-           "utcFirstCreated"           => :date,
-           "utcLastModified"           => :date,
-           "summary"                   => :string,
-           "invoiceNumber"             => :string,
-           "purchaseOrderNumber"       => :string,
-           "dueDate"                   => :date,
-           "ccy"                       => :string,
-           "autoPopulateFxRate"        => :boolean,
-           "fcToBcFxRate"              => :decimal,
-           "paymentCount"              => :integer,
-           "totalAmountInclTax"        => :decimal,
-           "amountOwed"                => :decimal,
-           "paidStatus"                => :string,
-           "requiresFollowUp"          => :boolean,
-           "isSent"                    => :boolean,
-           "layout"                    => :string,
-           "status"                    => :string,
-           "typeUid"                   => :string,
-           "contactUid"                => :integer,
-           "contactGivenName"          => :string,
-           "contactFamilyName"         => :string,
-           "contactOrganisationName"   => :string,
-           "shipToContactUid"          => :string,
-           "shipToContactFirstname"    => :string,
-           "shipToContactLastName"     => :string,
-           "shipToContactOrganisation" => :string,
-           "tags"                      => :array,
-           "totalAmountPaid"           => :decimal,
-           "invoiceItems"              => :array
+  class Invoice < Transaction
+
+    elements "transactionType" => :string,
+            "contactUid" => :string,
+            "shipToContactUid" => :integer,
+            "externalNotes" => :string,
+            "dueOrExpiryDate" => :date,
+            "layout" => :string,
+            "status" => :string,
+            "invoiceNumber" => :string,
+            "purchaseOrderNumber" => :string,
+            "invoiceItems" => :array,
+            "quickPayment" => :array,
+            "isSent" => :boolean
   end
   
 end

@@ -5,15 +5,34 @@ module Saasu
     ENDPOINT = "https://secure.saasu.com/webservices/rest/r1"
     
     def initialize(xml)
+
+      node = xml.root
+
       klass = self.class.name.split("::")[1].downcase
 
-      xml.children.each do |child|
+      # [CHRISK] types derived from Entity have attributes, 
+      # everything else does not
+      if is_a? Saasu::Entity
+        node.attributes.each do |attr|
+          send("#{attr[1].name.underscore.sub(/#{klass}_/, "")}=", 
+                            attr[1].text)
+        end
+      end
+
+      if defined? root
+        node = node.child
+      end
+
+      node.children.each do |child|
+        method_name = child.name.underscore.sub(/#{klass}_/, "")
         if !child.text?
-          child.attributes.each do |attr|
-            send("#{attr[1].name.underscore.sub(/#{klass}_/, "")}=", attr[1].text)
+          # [CHRISK] attributes found here signifies a sub entity type,
+          # pass in xml which allows entity to create itself
+          if !child.attributes.empty?
+            send("#{method_name}=", Nokogiri::XML(child.to_xml()))
+          else
+            send("#{child.name.underscore.sub(/#{klass}_/, "")}=", child.children.first.text) unless child.children.first.nil?
           end
-          
-          send("#{child.name.underscore.sub(/#{klass}_/, "")}=", child.children.first.text) unless child.children.first.nil?
         end
       end
     end
@@ -91,19 +110,35 @@ module Saasu
           options[:collection_name] = name.split("::").last.downcase + "ListItem"
           options
         end
-        
-        # Defines the fields for a resource and any transformations
-        # @param [Hash] key/value pair of field name and object type
-        #
-        def fields(fields = {})
-          fields.each do |k,v|
+       
+        def root(name)
+          @root = name
+        end
+
+        def attributes(attributes = {})
+          attributes.each do |k,v|
             define_accessor(k.underscore, v)
           end
         end
-        
+
+        # Defines the fields for a resource and any transformations
+        # @param [Hash] key/value pair of field name and object type
+        #
+        def elements(elements = {})
+          elements.each do |k,v|
+            define_accessor(k.underscore, v)
+          end
+        end
+
         def define_accessor(field, type)
           m = field.sub(/^#{defaults[:resource_name]}_/, "")
           case type
+          when :string 
+            class_eval <<-END
+              def #{m}=(v)
+                @#{m} = v
+              end
+            END
           when :decimal
             class_eval <<-END
               def #{m}=(v)
@@ -137,11 +172,12 @@ module Saasu
           else
             class_eval <<-END
               def #{m}=(v)
-                @#{m} = v
+                @#{m} = Saasu.const_get(:#{type}).new(v)
               end
             END
           end
-          
+         
+          # creates read accessor
           class_eval <<-END
             def #{m}
               @#{m}
