@@ -14,7 +14,7 @@ module Saasu
       # have attributes, everything else does not
       if is_a? Saasu::Entity
         node.attributes.each do |attr|
-          send("#{attr[1].name.underscore.sub(/#{klass}_/, "")}=", 
+          send("#{attr[1].name.underscore}=", 
                             attr[1].text)
 
         end
@@ -25,12 +25,11 @@ module Saasu
       end
 
       node.children.each do |child|
-        method_name = child.name.underscore.sub(/#{klass}_/, "")
         if !child.text?
           if child.children.size == 1 && child.child.text?
-            send("#{child.name.underscore.sub(/#{klass}_/, "")}=", child.children.first.text) unless child.children.first.nil?
+            send("#{child.name.underscore}=", child.children.first.text) unless child.children.first.nil?
           else
-            send("#{method_name}=", child)
+            send("#{child.name.underscore}=", child)
           end
         else
           puts "unexpected text node!"
@@ -131,8 +130,8 @@ module Saasu
           end
         end
 
-        def define_accessor(field, type)
-          m = field.sub(/^#{defaults[:resource_name]}_/, "")
+        def define_accessor(element, type)
+          m = element
           case type
           when :string 
             class_eval <<-END

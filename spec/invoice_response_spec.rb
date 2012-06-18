@@ -14,7 +14,7 @@ describe Saasu::InvoiceResponse do
 
   it { should respond_to :invoice }
 
-  describe :invoice do 
+  describe Saasu::Invoice do 
 
   subject { @invoiceResponse.invoice }
 
@@ -29,8 +29,28 @@ describe Saasu::InvoiceResponse do
   it { should respond_to :auto_populate_fx_rate }
   it { should respond_to :fc_to_bc_fx_rate } 
   it { should respond_to :requires_follow_up }
+  it { should respond_to :invoice_items }
 
   end
+
+  describe :invoice_items do 
+
+  subject { @invoiceResponse.invoice.invoice_items.size } 
+
+  it { should eq(1) }
+
+  end 
+
+  describe Saasu::ServiceInvoiceItem do 
+
+  subject { @invoiceResponse.invoice.invoice_items.first }
+
+  it { should respond_to :description }
+  it { should respond_to :account_uid }
+  it { should respond_to :total_amount_incl_tax }
+
+  end
+
 
 end
 
