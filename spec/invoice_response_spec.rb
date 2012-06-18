@@ -20,6 +20,15 @@ describe Saasu::InvoiceResponse do
 
   it { should respond_to :uid }
   it { should respond_to :last_updated_uid }
+  it { should respond_to :utc_first_created }
+  it { should respond_to :utc_last_modified }
+  it { should respond_to :transaction_type }
+  it { should respond_to :date } 
+  it { should respond_to :contact_uid } 
+  it { should respond_to :ccy } 
+  it { should respond_to :auto_populate_fx_rate }
+  it { should respond_to :fc_to_bc_fx_rate } 
+  it { should respond_to :requires_follow_up }
 
   end
 

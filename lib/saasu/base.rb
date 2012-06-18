@@ -10,8 +10,8 @@ module Saasu
 
       klass = self.class.name.split("::")[1].downcase
 
-      # [CHRISK] types derived from Entity have attributes, 
-      # everything else does not
+      # [CHRISK] in Saasu API only types derived from Entity 
+      # have attributes, everything else does not
       if is_a? Saasu::Entity
         node.attributes.each do |attr|
           send("#{attr[1].name.underscore.sub(/#{klass}_/, "")}=", 
@@ -27,20 +27,13 @@ module Saasu
       node.children.each do |child|
         method_name = child.name.underscore.sub(/#{klass}_/, "")
         if !child.text?
-          # [CHRISK] further children found here signifies a sub 
-          # type. Pass in xml which allows entity to create itself
-          # Nokogiri is wierd, why is inner text counted as child? 
-
           if child.children.size == 1 && child.child.text?
             send("#{child.name.underscore.sub(/#{klass}_/, "")}=", child.children.first.text) unless child.children.first.nil?
-
-            puts "#{child.name} setting "
           else
-            puts "#{self.class.name} sending child data\n #{child.to_s}\n to #{method_name}"
             send("#{method_name}=", child)
           end
         else
-          puts "should be setting #{child.content}"
+          puts "unexpected text node!"
         end
       end
     end
@@ -175,8 +168,7 @@ module Saasu
             class_eval <<-END
               def #{m}=(v)
                 @#{m} = v.children.to_a().map {|node| 
-                  puts "node \#{node.node_name()} data \#{node.to_s()}"
-                  Saasu.const_get(node.node_name()).new(node)
+                  Saasu.const_get(node.node_name().camelize).new(node)
                 }
               end
             END
