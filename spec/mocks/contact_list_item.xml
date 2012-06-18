@@ -1,0 +1,65 @@
+<contactListItem>
+      <contactUid>3141922</contactUid>
+      <utcFirstCreated>2012-06-18T03:33:39</utcFirstCreated>
+      <utcLastModified>2012-06-18T03:33:39</utcLastModified>
+      <lastUpdatedUid>AAAAAA5/rJQ=</lastUpdatedUid>
+      <salutation>Mrs.</salutation>
+      <givenName>Temperance</givenName>
+      <middleInitials/>
+      <familyName>Brennan</familyName>
+      <dateOfBirth/>
+      <organisation>Smithsonian Institute</organisation>
+      <organisationName>Smithsonian Institute</organisationName>
+      <organisationAbn/>
+      <abn/>
+      <companyEmail/>
+      <organisationWebsite/>
+      <organisationPosition>Director of Forensic Anthropology</organisationPosition>
+      <emailAddress>temperance.brennan@smithsonian.com.au</emailAddress>
+      <websiteUrl/>
+      <isActive>true</isActive>
+      <mainPhone/>
+      <homePhone/>
+      <mobilePhone>9349394839</mobilePhone>
+      <otherPhone/>
+      <fax/>
+      <street/>
+      <city/>
+      <state/>
+      <postCode/>
+      <country/>
+      <otherStreet/>
+      <otherCity/>
+      <otherState/>
+      <otherPostCode/>
+      <otherCountry/>
+      <contactID/>
+      <acceptDirectDeposit>false</acceptDirectDeposit>
+      <directDepositAccountName/>
+      <directDepositAccountBsb/>
+      <directDepositAccountNumber/>
+      <acceptCheque>false</acceptCheque>
+      <chequePayableTo/>
+      <statusUid/>
+      <status/>
+      <industryUid/>
+      <industry/>
+      <tags/>
+      <customField1/>
+      <customField2/>
+      <twitterID/>
+      <skypeID/>
+      <autoSendStatement>true</autoSendStatement>
+      <isPartner>false</isPartner>
+      <isCustomer>false</isCustomer>
+      <isSupplier>false</isSupplier>
+      <contactManagerUid/>
+      <saleTradingTermsType/>
+      <saleTradingTermsPaymentDueInInterval/>
+      <saleTradingTermsPaymentDueInIntervalType/>
+      <purchaseTradingTermsType/>
+      <purchaseTradingTermsPaymentDueInInterval/>
+      <purchaseTradingTermsPaymentDueInIntervalType/>
+      <defaultSaleDiscount/>
+      <defaultPurchaseDiscount/>
+</contactListItem>

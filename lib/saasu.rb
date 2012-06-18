@@ -13,4 +13,6 @@ require "saasu/transaction"
 require "saasu/invoice"
 require "saasu/invoice_response"
 require "saasu/service_invoice_item"
+require "saasu/item_invoice_item"
+require "saasu/contact"
 

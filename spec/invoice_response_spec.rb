@@ -29,6 +29,9 @@ describe Saasu::InvoiceResponse do
   it { should respond_to :auto_populate_fx_rate }
   it { should respond_to :fc_to_bc_fx_rate } 
   it { should respond_to :requires_follow_up }
+  it { should respond_to :layout }
+  it { should respond_to :status }
+  it { should respond_to :invoice_number }
   it { should respond_to :invoice_items }
 
   end

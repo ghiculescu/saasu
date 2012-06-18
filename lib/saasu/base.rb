@@ -8,8 +8,6 @@ module Saasu
 
       node = xml
 
-      klass = self.class.name.split("::")[1].downcase
-
       # [CHRISK] in Saasu API only types derived from Entity 
       # have attributes, everything else does not
       if is_a? Saasu::Entity
@@ -27,12 +25,12 @@ module Saasu
       node.children.each do |child|
         if !child.text?
           if child.children.size == 1 && child.child.text?
-            send("#{child.name.underscore}=", child.children.first.text) unless child.children.first.nil?
+            send("#{child.name.underscore}=", child.child.text) unless child.child.nil?
           else
-            send("#{child.name.underscore}=", child)
+            send("#{child.name.underscore}=", child) unless child.child.nil?
           end
         else
-          puts "unexpected text node!"
+          puts "unexpected text node #{child.name} with content #{child.content}!"
         end
       end
     end
@@ -68,9 +66,45 @@ module Saasu
       #
       def all(options = {})
         response = get(options)
-        xml      = Nokogiri::XML(response).css("#{defaults[:collection_name]}")
-        
-        collection = xml.inject([]) do |result, item|
+        xml      = Nokogiri::XML(response)
+
+        xsl = 
+          "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
+            <xsl:output method=\"html\" />
+            <xsl:template match=\"*\">
+              <xsl:copy>
+                <xsl:copy-of select=\"@*\" />
+                <xsl:apply-templates />
+              </xsl:copy>
+            </xsl:template>
+            <xsl:template match=\"/#{klass_name}ListResponse\">
+                <xsl:copy>
+                <xsl:copy-of select=\"@*\" />
+                <xsl:apply-templates />
+                </xsl:copy>
+            </xsl:template>
+            <xsl:template match=\"#{klass_name}List\">
+                <xsl:copy>
+                <xsl:copy-of select=\"@*\" />
+                <xsl:apply-templates />
+                </xsl:copy>
+            </xsl:template>
+            <xsl:template match=\"#{klass_name}ListItem\">
+                <contact>
+                <xsl:copy-of select=\"@*\" />
+                <xsl:apply-templates />
+                </contact>
+            </xsl:template>
+            <xsl:template match=\"#{klass_name}Uid\">
+              <uid><xsl:value-of select=\".\" /></uid>
+            </xsl:template>
+          </xsl:stylesheet>"
+
+        xslt = Nokogiri::XSLT.parse(xsl)
+        xml = xslt.transform(xml)
+        nodes = xml.css(klass_name)
+
+        collection = nodes.inject([]) do |result, item|
           result << new(item)
           result
         end
@@ -148,7 +182,9 @@ module Saasu
           when :date
             class_eval <<-END
               def #{m}=(v)
-                @#{m} = Date.parse(v)
+                unless v.nil? || v.empty?
+                  @#{m} = Date.parse(v)
+                end
               end
             END
           when :integer
@@ -196,6 +232,9 @@ module Saasu
           http             = Net::HTTP.new(uri.host, uri.port)
           http.use_ssl     = true
           http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+          puts "Request URL is #{uri.request_uri}" 
+
           response         = http.request(Net::HTTP::Get.new(uri.request_uri))
           (options[:format] && options[:format] == "pdf") ? response.body : response.body
         end
@@ -210,7 +249,11 @@ module Saasu
           path = (all == true ? defaults[:collection_name].sub(/Item/, "") : defaults[:resource_name])
           ENDPOINT + "/#{path}?#{query_string(options)}"
         end
-      
+
+        def klass_name()
+          self.name.split("::")[1].downcase
+        end
+
     end
     
   end
