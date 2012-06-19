@@ -15,4 +15,5 @@ require "saasu/invoice_response"
 require "saasu/service_invoice_item"
 require "saasu/item_invoice_item"
 require "saasu/contact"
+require "saasu/contact_response"
 

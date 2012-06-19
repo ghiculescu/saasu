@@ -34,9 +34,40 @@ module Saasu
         end
       end
     end
+
+    def initialize()
+    end
+
+    def to_xml()
+      doc = Nokogiri::XML::Document.new
+      if defined? @@root
+        node = doc.add_child( @@root.camelize )
+      else 
+        node = doc << create_node(self.class.name.split("::")[1].downcase.camelize)
+      end
+
+      if is_a? Entity
+        Saasu::Entity.stored_attributes.each do |k, v| 
+          node["#{k}"] = send(k.underscore).to_s
+        end
+      end
+
+      self.class.stored_elements.each do |k, v| 
+        node << create_node(k, send(k.underscore).to_s)
+      end
+
+      doc.to_s
+    end
+
+    def create_node(node, data = nil) 
+      (data.eql? nil) ? "<#{node}></#{node}>" : "<#{node}>#{data}</#{node}>"
+    end
     
     class << self
-      
+    
+      attr_accessor :stored_attributes
+      attr_accessor :stored_elements
+
       # @param [String] the API key
       #
       def api_key=(key)
@@ -116,8 +147,34 @@ module Saasu
       #
       def find(uid)
         response = get({:uid => uid}, false)
-        xml      = Nokogiri::XML(response).css("#{defaults[:resource_name]}")
-        new(xml.first)
+        xml = Nokogiri::XML(response)
+
+        xsl =
+        "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
+            <xsl:output method=\"html\" />
+            <xsl:template match=\"/#{klass_name}Response\">
+                <xsl:apply-templates />
+            </xsl:template>
+            <xsl:template match=\"*\">
+              <xsl:copy>
+                <xsl:copy-of select=\"@*\" />
+                <xsl:apply-templates />
+              </xsl:copy>
+            </xsl:template>
+         </xsl:stylesheet>"
+
+        xslt = Nokogiri::XSLT.parse(xsl)
+        xml = xslt.transform(xml)
+
+        new(xml.root)
+      end
+
+      def insert(entity)
+        post({ :entity => entity, :task => :insert })
+      end
+
+      def update(entity)
+        post({ :entity => entity, :task => :update })
       end
       
       # Allows defaults for the object to be set.
@@ -153,6 +210,7 @@ module Saasu
           attributes.each do |k,v|
             define_accessor(k.underscore, v)
           end
+          @stored_attributes = attributes
         end
 
         # Defines the fields for a resource and any transformations
@@ -162,6 +220,7 @@ module Saasu
           elements.each do |k,v|
             define_accessor(k.underscore, v)
           end
+          @stored_elements = elements
         end
 
         def define_accessor(element, type)
@@ -233,21 +292,51 @@ module Saasu
           http.use_ssl     = true
           http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
-          puts "Request URL is #{uri.request_uri}" 
+          puts "Request URL (GET) is #{uri.request_uri}" 
 
-          response         = http.request(Net::HTTP::Get.new(uri.request_uri))
-          (options[:format] && options[:format] == "pdf") ? response.body : response.body
+          response = http.request(Net::HTTP::Get.new(uri.request_uri))
+          response.body
+        end
+
+        def post(options)
+          uri = URI.parse(task_path())
+          http = Net::HTTP.new(uri.host, uri.port)
+          http.use_ssl = true;
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+          put "Request URL (POST) is #{uri.request_uri}"
+
+          post = Net::HTTP::Post.new(uri.request_uri)
+          post.body = options[:entity].to_xml
+          response  = http.request(post)
+          response.body
+        end
+
+        def delete(uid) 
+          put "Request URL (DELETE) is #{uri.request_uri}"
         end
         
         def query_string(options = {})
           options = defaults[:query_options].merge(options)
-          options = { :wsaccesskey => api_key, :fileuid => file_uid }.merge(options)
-          options.map { |k,v| "#{k.to_s.gsub(/_/, "")}=#{v}"}.join("&")
+          options = auth_params().merge(options)
+          url_encode_hash()
+        end
+
+        def auth_params()
+          { :wsacceskey => api_key, :fileuid => file_uid }
+        end
+
+        def url_encode_hash(hash)
+          hash.map { |k, v| "#{k.to_s.gsub(/_/, "")}=#{v}"}.join("&")
         end
         
         def request_path(options = {}, all = true)
           path = (all == true ? defaults[:collection_name].sub(/Item/, "") : defaults[:resource_name])
           ENDPOINT + "/#{path}?#{query_string(options)}"
+        end
+
+        def task_path()
+          ENDPOINT + "/Tasks?#{url_encode_hash(auth_params())}"
         end
 
         def klass_name()

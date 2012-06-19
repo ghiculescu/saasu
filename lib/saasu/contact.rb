@@ -1,5 +1,6 @@
 module Saasu
   class Contact < Entity
+
     root "contact"
     elements  "salutation" => :string,
               "givenName" => :string,
@@ -45,7 +46,9 @@ module Saasu
               "saleTradingTermsPaymentDueInInterval" => :integer,
               "saleTradingTermsPaymentDueInIntervalType" => :integer,
               "purchaseTradingTermsPaymentDueInInterval" => :integer,
-              "purchaseTradingTermsPaymentDueInIntervalType" => :integer
+              "purchaseTradingTermsPaymentDueInIntervalType" => :integer,
+              "defaultSaleDiscount" => :decimal,
+              "defaultPurchaseDiscount" => :decimal
 
   end
 end
