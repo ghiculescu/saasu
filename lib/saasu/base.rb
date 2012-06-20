@@ -49,12 +49,12 @@ module Saasu
       node = doc.root
 
       if is_a? Entity
-        Saasu::Entity.stored_attributes.each do |k, v| 
+        Saasu::Entity.class_attributes.each do |k, v| 
           node["#{k}"] = send(k.underscore).to_s
         end
       end
 
-      self.class.stored_elements.each do |k, v| 
+      self.class.class_elements.each do |k, v| 
         node.add_child( wrap_xml(k, send(k.underscore).to_s) )
       end
       doc
@@ -66,8 +66,8 @@ module Saasu
     
     class << self
     
-      attr_accessor :stored_attributes
-      attr_accessor :stored_elements
+      attr_accessor :class_attributes
+      attr_accessor :class_elements
 
       # @param [String] the API key
       #
@@ -177,6 +177,10 @@ module Saasu
       def update(entity)
         post({ :entity => entity, :task => :update })
       end
+
+      def delete(uid)
+        _delete(uid)
+      end
       
       # Allows defaults for the object to be set.
       # Generally the class name will be suitable and options will not need to be provided
@@ -211,7 +215,7 @@ module Saasu
           attributes.each do |k,v|
             define_accessor(k.underscore, v)
           end
-          @stored_attributes = attributes
+          @class_attributes = attributes
         end
 
         # Defines the fields for a resource and any transformations
@@ -221,7 +225,7 @@ module Saasu
           elements.each do |k,v|
             define_accessor(k.underscore, v)
           end
-          @stored_elements = elements
+          @class_elements = elements
         end
 
         def define_accessor(element, type)
@@ -320,21 +324,30 @@ module Saasu
           response.body
         end
 
-        def delete(uid) 
-          put "Request URL (DELETE) is #{uri.request_uri}"
+        def _delete(uid) 
+          uri = URI.parse(request_path({:uid => uid}, false))
+          http = Net::HTTP.new(uri.host, uri.port)
+          http.use_ssl = true;
+          http.verify_mode = OpenSSL::SSL::VERIFY_NONE
+
+          puts "Request URL (DELETE) is #{uri.request_uri}"
+
+          del = Net::HTTP::Delete.new(uri.request_uri)
+          response = http.request(del)
+          response.body
         end
         
         def query_string(options = {})
           options = defaults[:query_options].merge(options)
           options = auth_params().merge(options)
-          url_encode_hash()
+          url_encode_hash(options)
         end
 
         def auth_params()
           { :wsaccesskey => api_key, :fileuid => file_uid }
         end
 
-        def url_encode_hash(hash)
+        def url_encode_hash(hash = {})
           hash.map { |k, v| "#{k.to_s.gsub(/_/, "")}=#{v}"}.join("&")
         end
         
