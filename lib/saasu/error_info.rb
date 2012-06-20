@@ -3,7 +3,8 @@ module Saasu
       root "error"
       
       elements  "type" => :string,
-                "message" => :string
+                "message" => :string,
+                "stackTrace" => :string
   end
 end
 

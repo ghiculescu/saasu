@@ -15,17 +15,17 @@ module Saasu
       node = xml
 
       # [CHRISK] in Saasu API only types derived from Entity 
-      # have attributes, everything else does not
+      # and DeleteResult have attributes, everything else does not
       if (is_a? Entity) || (is_a? DeleteResult)
         node.attributes.each do |attr|
           send("#{attr[1].name.underscore}=", attr[1].text)
         end
       end
 
-      if defined? root
+      unless self.class.class_root.nil?
         node = node.child
       end
- 
+
       unless node.children.size == 0
         node.children.each do |child|
           if !child.text?
@@ -79,7 +79,8 @@ module Saasu
     end
     
     class << self
-    
+   
+      attr_accessor :class_root
       attr_accessor :class_attributes
       attr_accessor :class_elements
 
@@ -222,7 +223,7 @@ module Saasu
         end
        
         def root(name)
-          @root = name
+          @class_root = name
         end
 
         def attributes(attributes = {})
@@ -334,7 +335,42 @@ module Saasu
           node.child.add_child(options[:entity].to_xml.root)
 
           post.body = doc.to_xml(:encoding => "utf-8")
-          Saasu::UpdateResult.new(Nokogiri.XML(http.request(post)))
+
+          xml = Nokogiri.XML(http.request(post).body)
+
+          match = "#{options[:task].to_s + klass_name.camelize}Result";
+
+          xsl = 
+            "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
+            <xsl:output method=\"html\" />
+            <xsl:template match=\"tasksResponse\">
+                <xsl:apply-templates />
+            </xsl:template>
+            <xsl:template match=\"text()\">
+              <xsl:value-of select=\"normalize-space(.)\"/>
+            </xsl:template>
+            <xsl:template match=\"#{match}\">
+                <xsl:apply-templates />
+            </xsl:template>
+            <xsl:template match=\"*\">
+              <xsl:copy>
+                <xsl:copy-of select=\"@*\" />
+                <xsl:apply-templates />
+              </xsl:copy>
+            </xsl:template>
+         </xsl:stylesheet>"
+
+          xslt = Nokogiri::XSLT.parse(xsl)
+          xml = xslt.transform(xml)
+
+          if xml.root.name.eql? "errors"
+            Saasu::ErrorInfo.new(xml.child)
+          elsif (options[:task].eql? :update)
+            Saasu::UpdateResult.new(xml)
+          elsif (options[:task].eql? :insert)
+            Saasu::InsertResult.new(xml)
+          end
+
         end
 
         def _delete(uid) 
