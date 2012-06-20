@@ -39,12 +39,14 @@ module Saasu
     end
 
     def to_xml()
-      doc = Nokogiri::XML::Document.new
+      doc = Nokogiri::XML::Document.new()
       if defined? @@root
-        node = doc.add_child( @@root.camelize )
-      else 
-        node = doc << create_node(self.class.name.split("::")[1].downcase.camelize)
+        doc.add_child(wrap_xml( @@root.camelize(:lower) )) 
+      else
+        doc.add_child(wrap_xml(self.class.name.split("::")[1].downcase.camelize(:lower)))
       end
+ 
+      node = doc.root
 
       if is_a? Entity
         Saasu::Entity.stored_attributes.each do |k, v| 
@@ -53,14 +55,13 @@ module Saasu
       end
 
       self.class.stored_elements.each do |k, v| 
-        node << create_node(k, send(k.underscore).to_s)
+        node.add_child( wrap_xml(k, send(k.underscore).to_s) )
       end
-
-      doc.to_s
+      doc
     end
 
-    def create_node(node, data = nil) 
-      (data.eql? nil) ? "<#{node}></#{node}>" : "<#{node}>#{data}</#{node}>"
+    def wrap_xml(node_name, node_inner_text = nil) 
+      (node_inner_text.eql? nil) ? "<#{node_name} />" : "<#{node_name}>#{node_inner_text}</#{node_name}>"
     end
     
     class << self
@@ -304,10 +305,17 @@ module Saasu
           http.use_ssl = true;
           http.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
-          put "Request URL (POST) is #{uri.request_uri}"
+          puts "Request URL (POST) is #{uri.request_uri}"
 
           post = Net::HTTP::Post.new(uri.request_uri)
-          post.body = options[:entity].to_xml
+
+          doc = Nokogiri::XML::Document.new
+          doc.add_child("<task>")
+          node = doc.root
+          node.add_child("<#{options[:task].to_s + klass_name.camelize} />")
+          node.child.add_child(options[:entity].to_xml.root)
+
+          post.body = doc.to_xml(:encoding => "utf-8")
           response  = http.request(post)
           response.body
         end
@@ -323,7 +331,7 @@ module Saasu
         end
 
         def auth_params()
-          { :wsacceskey => api_key, :fileuid => file_uid }
+          { :wsaccesskey => api_key, :fileuid => file_uid }
         end
 
         def url_encode_hash(hash)
