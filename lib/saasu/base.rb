@@ -4,38 +4,41 @@ module Saasu
     
     ENDPOINT = "https://secure.saasu.com/webservices/rest/r1"
     
-    def initialize(xml)
+    def initialize(xml = nil)
+      unless xml.eql? nil
+        construct_from_xml(xml)
+      end
+    end
+
+    def construct_from_xml(xml)
 
       node = xml
 
       # [CHRISK] in Saasu API only types derived from Entity 
       # have attributes, everything else does not
-      if is_a? Saasu::Entity
+      if (is_a? Entity) || (is_a? DeleteResult)
         node.attributes.each do |attr|
-          send("#{attr[1].name.underscore}=", 
-                            attr[1].text)
-
+          send("#{attr[1].name.underscore}=", attr[1].text)
         end
       end
 
       if defined? root
         node = node.child
       end
-
-      node.children.each do |child|
-        if !child.text?
-          if child.children.size == 1 && child.child.text?
-            send("#{child.name.underscore}=", child.child.text) unless child.child.nil?
+ 
+      unless node.children.size == 0
+        node.children.each do |child|
+          if !child.text?
+            if child.children.size == 1 && child.child.text?
+              send("#{child.name.underscore}=", child.child.text) unless child.child.nil?
+            else
+              send("#{child.name.underscore}=", child) unless child.child.nil?
+            end
           else
-            send("#{child.name.underscore}=", child) unless child.child.nil?
+            puts "unexpected text node #{child.name} with content #{child.content}!"
           end
-        else
-          puts "unexpected text node #{child.name} with content #{child.content}!"
         end
       end
-    end
-
-    def initialize()
     end
 
     def to_xml()
@@ -48,15 +51,26 @@ module Saasu
  
       node = doc.root
 
-      if is_a? Entity
-        Saasu::Entity.class_attributes.each do |k, v| 
-          node["#{k}"] = send(k.underscore).to_s
+      attributes = {}
+
+      if is_a? Entity 
+        attributes = Entity.class_attributes
+      elsif is_a? DeleteResult
+        attributes = DeleteResult.class_attributes
+      end
+
+      attributes.each do |k, v| 
+        node["#{k}"] = send(k.underscore).to_s
+      end
+
+      elements = self.class.class_elements;
+
+      unless elements.nil?
+        elements.each do |k, v| 
+          node.add_child( wrap_xml(k, send(k.underscore).to_s) )
         end
       end
 
-      self.class.class_elements.each do |k, v| 
-        node.add_child( wrap_xml(k, send(k.underscore).to_s) )
-      end
       doc
     end
 
@@ -320,8 +334,7 @@ module Saasu
           node.child.add_child(options[:entity].to_xml.root)
 
           post.body = doc.to_xml(:encoding => "utf-8")
-          response  = http.request(post)
-          response.body
+          Saasu::UpdateResult.new(Nokogiri.XML(http.request(post)))
         end
 
         def _delete(uid) 
@@ -333,8 +346,25 @@ module Saasu
           puts "Request URL (DELETE) is #{uri.request_uri}"
 
           del = Net::HTTP::Delete.new(uri.request_uri)
-          response = http.request(del)
-          response.body
+          xml = Nokogiri.XML(http.request(del).body)
+          xsl = 
+            "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
+            <xsl:output method=\"html\" />
+            <xsl:template match=\"/#{klass_name}Response\">
+                <xsl:apply-templates />
+            </xsl:template>
+            <xsl:template match=\"*\">
+              <xsl:copy>
+                <xsl:copy-of select=\"@*\" />
+                <xsl:apply-templates />
+              </xsl:copy>
+            </xsl:template>
+         </xsl:stylesheet>"
+
+          xslt = Nokogiri::XSLT.parse(xsl)
+          xml = xslt.transform(xml)
+
+          Saasu::DeleteResult.new(xml.root)
         end
         
         def query_string(options = {})
