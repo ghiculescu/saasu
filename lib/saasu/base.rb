@@ -1,5 +1,11 @@
 module Saasu
-  
+
+  class ::Date
+    def to_saasu_iso8601()
+      strftime("%FT%R")
+    end
+  end
+
   class Base
     
     ENDPOINT = "https://secure.saasu.com/webservices/rest/r1"
@@ -117,14 +123,18 @@ module Saasu
         response = get(options)
         xml      = Nokogiri::XML(response)
 
+        puts "query reponse:\n #{xml.to_s}"
+
         xsl = 
           "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
-            <xsl:output method=\"html\" />
             <xsl:template match=\"*\">
               <xsl:copy>
                 <xsl:copy-of select=\"@*\" />
                 <xsl:apply-templates />
               </xsl:copy>
+            </xsl:template>
+            <xsl:template match=\"text()\">
+              <xsl:value-of select=\"normalize-space(.)\"/>
             </xsl:template>
             <xsl:template match=\"/#{klass_name}ListResponse\">
                 <xsl:copy>
@@ -139,10 +149,10 @@ module Saasu
                 </xsl:copy>
             </xsl:template>
             <xsl:template match=\"#{klass_name}ListItem\">
-                <contact>
+                <#{klass_name.camelize(:lower)}>
                 <xsl:copy-of select=\"@*\" />
                 <xsl:apply-templates />
-                </contact>
+                </#{klass_name.camelize(:lower)}>
             </xsl:template>
             <xsl:template match=\"#{klass_name}Uid\">
               <uid><xsl:value-of select=\".\" /></uid>
@@ -169,7 +179,6 @@ module Saasu
 
         xsl =
         "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
-            <xsl:output method=\"html\" />
             <xsl:template match=\"/#{klass_name}Response\">
                 <xsl:apply-templates />
             </xsl:template>
@@ -440,7 +449,7 @@ module Saasu
         end
 
         def url_encode_hash(hash = {})
-          hash.map { |k, v| "#{k.to_s.gsub(/_/, "")}=#{v}"}.join("&")
+          hash.map { |k, v| "#{k.to_s.gsub(/_/, "")}=#{(v.is_a? Date) ? v.to_saasu_iso8601 : v}"}.join("&")
         end
         
         def request_path(options = {}, all = true)
