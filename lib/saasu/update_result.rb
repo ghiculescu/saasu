@@ -1,5 +1,5 @@
 module Saasu
-  class UpdateResult < TaskResult
+  class UpdateResult < Base
       attributes "updatedEntityUid" => :integer,
                  "lastUpdatedUid" => :string,
                  "utcLastModified" => :date

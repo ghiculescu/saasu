@@ -3,7 +3,9 @@ module Saasu
   class Base
     
     ENDPOINT = "https://secure.saasu.com/webservices/rest/r1"
-    
+
+    attr_accessor :errors
+
     def initialize(xml = nil)
       unless xml.eql? nil
         construct_from_xml(xml)
@@ -77,7 +79,7 @@ module Saasu
     def wrap_xml(node_name, node_inner_text = nil) 
       (node_inner_text.eql? nil) ? "<#{node_name} />" : "<#{node_name}>#{node_inner_text}</#{node_name}>"
     end
-    
+   
     class << self
    
       attr_accessor :class_root
@@ -373,21 +375,28 @@ module Saasu
             </xsl:template>
          </xsl:stylesheet>"
 
-          puts "pretransform:\n #{xml.to_s}"
+          #puts "pre transform:\n #{xml.to_s}"
 
           xslt = Nokogiri::XSLT.parse(xsl)
           xml = xslt.transform(xml)
 
-          if xml.root.name.eql? "errors"
-            xml.css("error").map() do |item|
+          #puts "post transform:\n #{xml.to_s}"
+
+          errors = nil
+
+          if xml.root.child.name.eql? "errors"
+            errors = xml.root.child.css("error").map() do |item|
               ErrorInfo.new(item)
             end
-          elsif (options[:task].eql? :update)
-            UpdateResult.new(xml)
-          elsif (options[:task].eql? :insert)
-            InsertResult.new(xml)
           end
 
+          if (options[:task].eql? :update)
+            result = UpdateResult.new(errors.nil? ? xml : nil)
+          elsif (options[:task].eql? :insert)
+            result = InsertResult.new(errors.nil? ? xml : nil)
+          end
+          result.errors = errors
+          result
         end
 
         def _delete(uid) 
