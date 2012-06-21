@@ -12,18 +12,16 @@ module Saasu
 
     def construct_from_xml(xml)
 
-      node = xml
+      if xml.is_a? Nokogiri::XML::Document
+        node = xml.root
+      else
+        node = xml
+      end
 
-      # [CHRISK] in Saasu API only types derived from Entity 
-      # and DeleteResult have attributes, everything else does not
-      if (is_a? Entity) || (is_a? DeleteResult)
+      if respond_to? :has_attributes?
         node.attributes.each do |attr|
           send("#{attr[1].name.underscore}=", attr[1].text)
         end
-      end
-
-      unless self.class.class_root.nil?
-        node = node.child
       end
 
       unless node.children.size == 0
@@ -46,7 +44,7 @@ module Saasu
       if defined? @@root
         doc.add_child(wrap_xml( @@root.camelize(:lower) )) 
       else
-        doc.add_child(wrap_xml(self.class.name.split("::")[1].downcase.camelize(:lower)))
+        doc.add_child(wrap_xml(self.class.name.split("::")[1].camelize(:lower)))
       end
  
       node = doc.root
@@ -55,6 +53,8 @@ module Saasu
 
       if is_a? Entity 
         attributes = Entity.class_attributes
+      elsif is_a? UpdateResult
+        attributes = UpdateResult.class_attributes
       elsif is_a? DeleteResult
         attributes = DeleteResult.class_attributes
       end
@@ -230,6 +230,11 @@ module Saasu
           attributes.each do |k,v|
             define_accessor(k.underscore, v)
           end
+          class_eval <<-END
+            def has_attributes?
+              TrueClass
+            end
+          END
           @class_attributes = attributes
         end
 
@@ -261,8 +266,14 @@ module Saasu
           when :date
             class_eval <<-END
               def #{m}=(v)
-                unless v.nil? || v.empty?
-                  @#{m} = Date.parse(v)
+                unless v.nil?
+                  if v.is_a? String
+                    unless v.empty?
+                      @#{m} = Date.parse(v)
+                    end
+                  elsif v.is_a? Date
+                    @#{m} = v 
+                  end
                 end
               end
             END
@@ -342,15 +353,17 @@ module Saasu
 
           xsl = 
             "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
-            <xsl:output method=\"html\" />
-            <xsl:template match=\"tasksResponse\">
+            <xsl:template match=\"/tasksResponse\">
                 <xsl:apply-templates />
             </xsl:template>
             <xsl:template match=\"text()\">
               <xsl:value-of select=\"normalize-space(.)\"/>
             </xsl:template>
-            <xsl:template match=\"#{match}\">
-                <xsl:apply-templates />
+            <xsl:template match=\"*[substring(name(), string-length(name()) - 5) = 'Result']\">
+              <xsl:copy>
+                <xsl:copy-of select=\"@*\" />
+                  <xsl:apply-templates />
+                </xsl:copy>
             </xsl:template>
             <xsl:template match=\"*\">
               <xsl:copy>
@@ -360,15 +373,19 @@ module Saasu
             </xsl:template>
          </xsl:stylesheet>"
 
+          puts "pretransform:\n #{xml.to_s}"
+
           xslt = Nokogiri::XSLT.parse(xsl)
           xml = xslt.transform(xml)
 
           if xml.root.name.eql? "errors"
-            Saasu::ErrorInfo.new(xml.child)
+            xml.css("error").map() do |item|
+              ErrorInfo.new(item)
+            end
           elsif (options[:task].eql? :update)
-            Saasu::UpdateResult.new(xml)
+            UpdateResult.new(xml)
           elsif (options[:task].eql? :insert)
-            Saasu::InsertResult.new(xml)
+            InsertResult.new(xml)
           end
 
         end

@@ -1,7 +1,6 @@
 module Saasu
   class Contact < Entity
 
-    root "contact"
     elements  "salutation" => :string,
               "givenName" => :string,
               "middleInitials" => :string,
