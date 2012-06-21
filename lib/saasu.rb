@@ -17,6 +17,7 @@ require "saasu/item_invoice_item"
 require "saasu/contact"
 require "saasu/contact_response"
 require "saasu/error_info"
+require "saasu/insert_result"
 require "saasu/update_result"
 require "saasu/delete_result"
 

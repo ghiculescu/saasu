@@ -61,6 +61,8 @@ module Saasu
 
       if is_a? Entity 
         attributes = Entity.class_attributes
+      elsif is_a? InsertResult
+        attributes = InsertResult.class_attributes
       elsif is_a? UpdateResult
         attributes = UpdateResult.class_attributes
       elsif is_a? DeleteResult
@@ -123,8 +125,6 @@ module Saasu
         response = get(options)
         xml      = Nokogiri::XML(response)
 
-        puts "query reponse:\n #{xml.to_s}"
-
         xsl = 
           "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
             <xsl:template match=\"*\">
@@ -181,6 +181,9 @@ module Saasu
         "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
             <xsl:template match=\"/#{klass_name}Response\">
                 <xsl:apply-templates />
+            </xsl:template>
+            <xsl:template match=\"text()\">
+              <xsl:value-of select=\"normalize-space(.)\"/>
             </xsl:template>
             <xsl:template match=\"*\">
               <xsl:copy>
@@ -393,9 +396,11 @@ module Saasu
 
           errors = nil
 
-          if xml.root.child.name.eql? "errors"
-            errors = xml.root.child.css("error").map() do |item|
-              ErrorInfo.new(item)
+          unless xml.root.child.nil? 
+            if xml.root.child.name.eql? "errors"
+              errors = xml.root.child.css("error").map() do |item|
+                ErrorInfo.new(item)
+              end
             end
           end
 
