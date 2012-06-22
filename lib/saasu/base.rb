@@ -4,6 +4,9 @@ module Saasu
     def to_saasu_iso8601()
       strftime("%FT%R")
     end
+    def to_saasu()
+      strftime("%F")
+    end
   end
 
   class Base
@@ -49,14 +52,15 @@ module Saasu
 
     def to_xml()
       doc = Nokogiri::XML::Document.new()
-      if defined? @@root
-        doc.add_child(wrap_xml( @@root.camelize(:lower) )) 
-      else
-        doc.add_child(wrap_xml(self.class.name.split("::")[1].camelize(:lower)))
-      end
- 
-      node = doc.root
 
+      if defined? @@root
+        root_xml = wrap_xml(@@root.camelize(:lower))
+      else
+        root_xml = wrap_xml(self.class.name.split("::")[1].camelize(:lower))
+      end
+
+      node = doc.add_child( root_xml )
+ 
       attributes = {}
 
       if is_a? Entity 
@@ -69,23 +73,56 @@ module Saasu
         attributes = DeleteResult.class_attributes
       end
 
+      unless self.class.class_attributes.nil?
+        attributes.merge(self.class.class_attributes)
+      end
+
       attributes.each do |k, v| 
         node["#{k}"] = send(k.underscore).to_s
       end
 
-      elements = self.class.class_elements;
+      elements = {}
 
-      unless elements.nil?
-        elements.each do |k, v| 
-          node.add_child( wrap_xml(k, send(k.underscore).to_s) )
+      if is_a? Transaction
+        elements = Transaction.class_elements
+      end
+
+      unless self.class.class_elements.nil?
+        elements = elements.merge(self.class.class_elements)
+      end
+
+      unless elements.nil? || elements.empty?
+        elements.each do |k, v|
+          if v.eql? :array
+            ap = node.add_child(wrap_xml(k.camelize(:lower)))
+            if ap.is_a? Nokogiri::XML::NodeSet
+              ap = ap.first()
+            end
+            array = send(k.underscore)
+            unless array.nil? || array.empty?
+              array.each() do |e|
+                ap.add_child( e.to_xml.root )
+              end
+            end
+          else
+            node.add_child(wrap_xml(k.camelize(:lower), send(k.underscore)))
+          end
         end
       end
 
       doc
     end
 
-    def wrap_xml(node_name, node_inner_text = nil) 
-      (node_inner_text.eql? nil) ? "<#{node_name} />" : "<#{node_name}>#{node_inner_text}</#{node_name}>"
+    def wrap_xml(node_name, node_inner_data = nil) 
+      if node_inner_data.nil? 
+        "<#{node_name}></#{node_name}>"
+      else
+        if (node_inner_data.is_a? Date) || (node_inner_data.is_a? DateTime)
+          "<#{node_name}>#{node_inner_data.to_saasu}</#{node_name}>"
+        else
+          "<#{node_name}>#{node_inner_data}</#{node_name}>"
+        end
+      end 
     end
    
     class << self
@@ -246,7 +283,7 @@ module Saasu
           end
           class_eval <<-END
             def has_attributes?
-              TrueClass
+              true
             end
           END
           @class_attributes = attributes
@@ -287,6 +324,8 @@ module Saasu
                     end
                   elsif v.is_a? Date
                     @#{m} = v 
+                  else
+                    raise TypeError, 'Expecting Date or String'
                   end
                 end
               end
@@ -300,15 +339,27 @@ module Saasu
           when :boolean
             class_eval <<-END
               def #{m}=(v)
-                @#{m} = (v.match(/true/i) ? true : false)
+                if (v.is_a? TrueClass) || (v.is_a? FalseClass)
+                  @#{m} = v;
+                elsif v.is_a? String
+                  @#{m} = (v.match(/true/i) ? true : false)
+                else
+                  raise TypeError, 'Expecting true/false or string'
+                end
               end
             END
           when :array
             class_eval <<-END
               def #{m}=(v)
-                @#{m} = v.children.to_a().map {|node| 
-                  Saasu.const_get(node.node_name().camelize).new(node)
-                }
+                if v.is_a? Nokogiri::XML::Node
+                  @#{m} = v.children.to_a().map {|node| 
+                    Saasu.const_get(node.node_name().camelize).new(node)
+                  }
+                elsif v.is_a? Array 
+                  @#{m} = v
+                else
+                  raise TypeError, 'Expecting an Array or XML Node'
+                end
               end
             END
           else
@@ -354,8 +405,7 @@ module Saasu
           post = Net::HTTP::Post.new(uri.request_uri)
 
           doc = Nokogiri::XML::Document.new
-          doc.add_child("<task>")
-          node = doc.root
+          node = doc.add_child("<task>")
           node.add_child("<#{options[:task].to_s + klass_name.camelize} />")
           node.child.add_child(options[:entity].to_xml.root)
 
@@ -396,10 +446,16 @@ module Saasu
 
           errors = nil
 
-          unless xml.root.child.nil? 
-            if xml.root.child.name.eql? "errors"
-              errors = xml.root.child.css("error").map() do |item|
-                ErrorInfo.new(item)
+          # [CHRISK] wow! so many ways we can get errors presented
+          unless xml.root.nil?
+            if xml.root.name.eql? "errors"
+              errors = xml.root.css("error").map() do |e|
+                ErrorInfo.new(e)
+              end
+            elsif (!xml.root.child.nil?) && 
+                  (xml.root.child.name.eql? "errors")
+              errors = xml.root.child.css("error").map() do |e|
+                ErrorInfo.new(e)
               end
             end
           end
@@ -407,7 +463,13 @@ module Saasu
           if (options[:task].eql? :update)
             result = UpdateResult.new(errors.nil? ? xml : nil)
           elsif (options[:task].eql? :insert)
-            result = InsertResult.new(errors.nil? ? xml : nil)
+            klass_lookup = match.camelize
+            begin
+              klass = Saasu.const_get(klass_lookup)
+              result = klass.new(errors.nil? ? xml : nil)
+            rescue NameError
+              result = InsertResult.new(errors.nil? ? xml : nil)
+            end
           end
           result.errors = errors
           result
@@ -442,7 +504,7 @@ module Saasu
 
           Saasu::DeleteResult.new(xml.root)
         end
-        
+
         def query_string(options = {})
           options = defaults[:query_options].merge(options)
           options = auth_params().merge(options)

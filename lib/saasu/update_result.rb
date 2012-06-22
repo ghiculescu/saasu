@@ -5,6 +5,3 @@ module Saasu
                  "utcLastModified" => :date
   end
 end
-
-
-
