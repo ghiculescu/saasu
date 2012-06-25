@@ -74,7 +74,7 @@ module Saasu
       end
 
       unless self.class.class_attributes.nil?
-        attributes.merge(self.class.class_attributes)
+        attributes = attributes.merge(self.class.class_attributes)
       end
 
       attributes.each do |k, v| 
@@ -459,15 +459,15 @@ module Saasu
               end
             end
           end
-
-          if (options[:task].eql? :update)
-            result = UpdateResult.new(errors.nil? ? xml : nil)
-          elsif (options[:task].eql? :insert)
+         
+          begin 
             klass_lookup = match.camelize
-            begin
-              klass = Saasu.const_get(klass_lookup)
-              result = klass.new(errors.nil? ? xml : nil)
-            rescue NameError
+            klass = Saasu.const_get(klass_lookup.to_sym)
+            result = klass.new(errors.nil? ? xml : nil)
+          rescue NameError
+            if (options[:task].eql? :update)
+              result = UpdateResult.new(errors.nil? ? xml : nil)
+            elsif (options[:task].eql? :insert)
               result = InsertResult.new(errors.nil? ? xml : nil)
             end
           end
@@ -529,7 +529,7 @@ module Saasu
         end
 
         def klass_name()
-          self.name.split("::")[1].downcase
+          self.name.split("::")[1].camelize(:lower)
         end
 
     end
