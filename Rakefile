@@ -15,11 +15,11 @@ require 'jeweler'
 Jeweler::Tasks.new do |gem|
   # gem is a Gem::Specification... see http://docs.rubygems.org/read/chapter/20 for more options
   gem.name        = "saasu"
-  gem.summary     = "Ruby wrapper for the Saasu api"
-  gem.description = "Ruby wrapper for the Saasu api"
+  gem.summary     = "Expanded Fork of Ruby wrapper for the Saasu api"
+  gem.description = "Expanded Fork of Ruby wrapper for the Saasu api. Originally written by Keiran Johnson, it has had features added to it in order to suit the needs of Agworld Pty Ltd by Chris Kruger"
   gem.email       = "hello@invisiblelines.com"
-  gem.homepage    = "http://github.com/kieranj/saasu"
-  gem.authors     = ["Kieran Johnson"]
+  gem.homepage    = "http://github.com/agworld/saasu"
+  gem.authors     = ["Kieran Johnson, Chris Kruger"]
   # dependencies defined in Gemfile
 end
 Jeweler::RubygemsDotOrgTasks.new
