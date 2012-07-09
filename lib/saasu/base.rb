@@ -13,6 +13,15 @@ module Saasu
     
     ENDPOINT = "https://secure.saasu.com/webservices/rest/r1"
 
+    STANDARD_TYPES = [
+      :string,
+      :decimal,
+      :date,
+      :integer,
+      :boolean,
+      :array
+    ]
+
     attr_accessor :errors
 
     def initialize(xml = nil)
@@ -104,8 +113,15 @@ module Saasu
                 ap.add_child( e.to_xml.root )
               end
             end
-          else
+          elsif STANDARD_TYPES.include?(v)
             node.add_child(wrap_xml(k.camelize(:lower), send(k.underscore)))
+          else
+            o = send(k.underscore)
+            unless o.nil?
+              node.add_child(o.to_xml().root)
+            else
+              node.add_child(wrap_xml(k.camelize(:lower)))
+            end
           end
         end
       end
@@ -365,7 +381,11 @@ module Saasu
           else
             class_eval <<-END
               def #{m}=(v)
-                @#{m} = Saasu.const_get(:#{type}).new(v)
+                if v.is_a? Base
+                  @#{m} = v
+                else 
+                  @#{m} = Saasu.const_get(:#{type}).new(v)
+                end
               end
             END
           end
