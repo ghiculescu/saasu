@@ -5,7 +5,7 @@
 
 Gem::Specification.new do |s|
   s.name = "saasu"
-  s.version = "0.0.4"
+  s.version = "0.0.5"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kieran Johnson, Chris Kruger"]
@@ -45,6 +45,7 @@ Gem::Specification.new do |s|
     "lib/saasu/quick_payment.rb",
     "lib/saasu/service_invoice_item.rb",
     "lib/saasu/transaction.rb",
+    "lib/saasu/transaction_category.rb",
     "lib/saasu/update_inventory_item_result.rb",
     "lib/saasu/update_result.rb",
     "saasu.gemspec",
