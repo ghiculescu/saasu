@@ -1,6 +1,6 @@
 module Saasu
-  class Address < Base
-    root "address"
+  class PostalAddress < Base
+    root "postalAddress"
     elements  "street" => :string,
               "city" => :string,
               "state" => :string,
