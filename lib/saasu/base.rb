@@ -219,7 +219,7 @@ module Saasu
         xslt = Nokogiri::XSLT.parse(xsl)
         xml = xslt.transform(xml)
 
-        print "#{xml.to_s()}\n"
+        #print "#{xml.to_s()}\n"
 
         File.open("#{klass_list_item}.xml".underscore, 'w') { |f| f.write(xml.to_s()) }
 
