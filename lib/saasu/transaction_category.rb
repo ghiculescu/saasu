@@ -5,7 +5,8 @@ module Saasu
               "name" => :string,
               "isActive" => :boolean,
               "ledgerCode" => :string,
-              "defaultTaxCode" => :string
+              "defaultTaxCode" => :string,
+              "isInbuilt" => :boolean
 
   end
 end

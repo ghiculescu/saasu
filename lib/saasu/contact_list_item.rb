@@ -1,16 +1,13 @@
 module Saasu
-  class Contact < Entity
+  class ContactListItem < Entity
 
     elements  "salutation" => :string,
               "givenName" => :string,
               "middleInitials" => :string,
               "familyName" => :string,
               "dateOfBirth" => :date,
-
-              # only these 2 when fetching all it seems 
               "organisation" => :string, 
               "organisationUid" => :integer, 
-
               "organisationName" => :string,
               "organisationAbn" => :string,
               "organisationWebsite" => :string,
@@ -18,18 +15,24 @@ module Saasu
               "contactID" => :string,
               "abn" => :string,
               "websiteUrl" => :string,
-              "email" => :string,           
               "email_address" => :string,     # really! it's not consistant
               "mainPhone" => :string,
               "homePhone" => :string,
               "fax" => :string,
+              "city" => :string,
               "mobilePhone" => :string,
               "otherPhone" => :string,
               "statusUid" => :integer,
               "industryUid" => :integer,
-              "postalAddress" => :PostalAddress,
-              "otherAddress" => :PostalAddress,
               "street" => :string,
+              "state" => :string,
+              "country" => :string,
+              "otherStreet" => :string,
+              "otherCity" => :string,
+              "otherState" => :string,
+              "otherPostCode" => :string,
+              "otherCountry" => :string,
+              "postCode" => :string,
               "isActive" => :boolean,
               "acceptDirectDeposit" => :boolean,
               "directDepositAccountName" => :string,
@@ -56,3 +59,4 @@ module Saasu
   end
 end
  
+

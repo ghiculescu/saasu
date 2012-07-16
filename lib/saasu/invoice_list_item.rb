@@ -1,9 +1,8 @@
 module Saasu
   
-  class InvoiceListItem < Base
+  class InvoiceListItem < Entity
     
-    fields "invoiceUid"                => :integer,
-           "lastUpdatedUid"            => :string,
+    elements "lastUpdatedUid"            => :string,
            "ccy"                       => :string,
            "autoPopulateFXRate"        => :boolean,
            "fcToBcFxRate"              => :decimal,
@@ -32,8 +31,9 @@ module Saasu
            "shipToContactFirstname"    => :string,
            "shipToContactLastName"     => :string,
            "shipToContactOrganisation" => :string,
-           "tags"                      => :array
-      
+           "tags"                      => :string
+     
+      # [CHRISK] not used yet 
       defaults :query_options => { :transaction_type => "s" }
   end
   

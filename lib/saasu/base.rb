@@ -178,6 +178,8 @@ module Saasu
         response = get(options)
         xml      = Nokogiri::XML(response)
 
+        klass_list_item = "#{klass_name}ListItem"
+
         xsl = 
           "<xsl:stylesheet version=\"1.0\" xmlns:xsl=\"http://www.w3.org/1999/XSL/Transform\">
             <xsl:template match=\"*\">
@@ -201,11 +203,13 @@ module Saasu
                 <xsl:apply-templates />
                 </xsl:copy>
             </xsl:template>
-            <xsl:template match=\"#{klass_name}ListItem\">
-                <#{klass_name.camelize(:lower)}>
+            <xsl:template match=\"#{klass_list_item}\">
+                <!-- <#{klass_name.camelize(:lower)}> -->
+                <xsl:copy>
                 <xsl:copy-of select=\"@*\" />
                 <xsl:apply-templates />
-                </#{klass_name.camelize(:lower)}>
+                </xsl:copy>
+                <!-- </#{klass_name.camelize(:lower)}> -->
             </xsl:template>
             <xsl:template match=\"#{klass_name}Uid\">
               <uid><xsl:value-of select=\".\" /></uid>
@@ -214,10 +218,16 @@ module Saasu
 
         xslt = Nokogiri::XSLT.parse(xsl)
         xml = xslt.transform(xml)
-        nodes = xml.css(klass_name)
+
+        print "#{xml.to_s()}\n"
+
+        File.open("#{klass_list_item}.xml".underscore, 'w') { |f| f.write(xml.to_s()) }
+
+        nodes = xml.css(klass_list_item)
 
         collection = nodes.inject([]) do |result, item|
-          result << new(item)
+          klass = Saasu.const_get(klass_list_item.camelize(:upper).to_sym)
+          result << klass.new(item)
           result
         end
         collection
