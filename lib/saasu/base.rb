@@ -221,7 +221,7 @@ module Saasu
 
         #print "#{xml.to_s()}\n"
 
-        File.open("#{klass_list_item}.xml".underscore, 'w') { |f| f.write(xml.to_s()) }
+        #File.open("#{klass_list_item}.xml".underscore, 'w') { |f| f.write(xml.to_s()) }
 
         nodes = xml.css(klass_list_item)
 
