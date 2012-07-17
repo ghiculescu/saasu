@@ -18,7 +18,7 @@ module Saasu
             "externalNotes" => :string,
             "requiresFollowUp" => :boolean,
             "dueOrExpiryDate" => :date,
-            "tradingTerms" => :string,
+            "tradingTerms" => :TradingTerms,
             "layout" => :string,
             "status" => :string,
             "invoiceNumber" => :string,
@@ -27,6 +27,8 @@ module Saasu
             "quickPayment" => :array,
             "payments" => :array,
             "totalAmountInclTax" => :decimal,
+            "totalAmountExclTax" => :decimal,
+            "totalTaxAmount" => :decimal,
             "isSent" => :boolean
   end
   

@@ -256,6 +256,9 @@ module Saasu
             </xsl:template>
          </xsl:stylesheet>"
 
+
+        print "#{xml.to_s}\n" 
+
         xslt = Nokogiri::XSLT.parse(xsl)
         xml = xslt.transform(xml)
 
