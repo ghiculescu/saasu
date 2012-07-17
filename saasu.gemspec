@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = "saasu"
-  s.version = "0.0.8"
+  s.version = "0.0.14"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Kieran Johnson, Chris Kruger"]
-  s.date = "2012-07-16"
+  s.date = "2012-07-17"
   s.description = "Expanded Fork of Ruby wrapper for the Saasu api. Originally written by Keiran Johnson, it has had features added to it in order to suit the needs of Agworld Pty Ltd by Chris Kruger"
   s.email = "hello@invisiblelines.com"
   s.extra_rdoc_files = [
@@ -37,14 +37,15 @@ Gem::Specification.new do |s|
     "lib/saasu/insert_result.rb",
     "lib/saasu/inventory_item.rb",
     "lib/saasu/invoice.rb",
-    "lib/saasu/invoice_item.rb",
     "lib/saasu/invoice_list_item.rb",
     "lib/saasu/invoice_payment.rb",
     "lib/saasu/invoice_payment_item.rb",
+    "lib/saasu/invoice_payment_list_item.rb",
     "lib/saasu/item_invoice_item.rb",
     "lib/saasu/postal_address.rb",
     "lib/saasu/quick_payment.rb",
     "lib/saasu/service_invoice_item.rb",
+    "lib/saasu/trading_terms.rb",
     "lib/saasu/transaction.rb",
     "lib/saasu/transaction_category.rb",
     "lib/saasu/update_inventory_item_result.rb",
