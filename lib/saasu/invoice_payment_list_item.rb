@@ -1,6 +1,6 @@
 module Saasu
   
-  class InvoicePaymentList < Entity
+  class InvoicePaymentListItem < Entity
 
     elements  "paymentDate" => :date,  
               "dateCleared" => :date,
