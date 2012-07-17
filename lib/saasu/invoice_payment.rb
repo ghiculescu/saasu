@@ -3,6 +3,7 @@ module Saasu
   class InvoicePayment < Entity
 
     elements  "transactionType" => :string,
+              "contactUid" => :integer,
               "date" => :date,  
               "reference" => :string,
               "summary" => :string,
