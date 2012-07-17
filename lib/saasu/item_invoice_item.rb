@@ -7,6 +7,9 @@ module Saasu
               "description" => :string,
               "taxCode" => :string,
               "unitPriceInclTax" => :decimal,
+              "totalAmountInclTax" => :decimal,
+              "totalAmountExclTax" => :decimal,
+              "totalTaxAmount" => :decimal,
               "percentageDiscount" => :decimal
   end
   
