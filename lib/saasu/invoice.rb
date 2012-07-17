@@ -26,6 +26,7 @@ module Saasu
             "invoiceItems" => :array,
             "quickPayment" => :array,
             "payments" => :array,
+            "totalAmountInclTax" :decimal
             "isSent" => :boolean
   end
   
