@@ -1,6 +1,11 @@
 # Saasu
 
-This gem provide a ruby wrapper to the Saasu api.
+This gem provide a ruby wrapper to the Saasu api. 
+
+# History 
+
+Originally started by Keiran Johnson this versions of the Saasu library was forked and is now maintained by 
+[Agworld Pty Ltd](http://www.agworld.co).
 
 ## Installation
 
