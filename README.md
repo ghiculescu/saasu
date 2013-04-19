@@ -33,6 +33,6 @@ To fetch a single invoice by its uid
     
 ## Copyright
 
-Copyright (c) 2012 Agworld Pty Ltd. See LICENSE for details.
+Copyright (c) 2013 Agworld Pty Ltd. See LICENSE for details.
 
-Copyright (c) 2011 Kieran Johnson.
+Original Portions - Copyright (c) 2011 Kieran Johnson.
