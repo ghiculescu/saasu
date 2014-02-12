@@ -48,9 +48,9 @@ module Saasu
         node.children.each do |child|
           if !child.text?
             if child.children.size == 1 && child.child.text?
-              send("#{child.name.underscore}=", child.child.text) unless child.child.nil?
+              send("#{child.name.underscore}=", child.child.text) if !child.child.nil? && respond_to?("#{child.name.underscore}=")
             else
-              send("#{child.name.underscore}=", child) unless child.child.nil?
+              send("#{child.name.underscore}=", child) if !child.child.nil? && respond_to?("#{child.name.underscore}=")
             end
           else
             puts "unexpected text node #{child.name} with content #{child.content}!"
@@ -86,8 +86,9 @@ module Saasu
         attributes = attributes.merge(self.class.class_attributes)
       end
 
-      attributes.each do |k, v| 
-        node["#{k}"] = send(k.underscore).to_s
+      attributes.each do |k, v|
+        attr_value = send(k.underscore)
+        node["#{k}"] = attr_value.to_s unless attr_value.nil?
       end
 
       elements = {}
@@ -114,14 +115,11 @@ module Saasu
               end
             end
           elsif STANDARD_TYPES.include?(v)
-            node.add_child(wrap_xml(k.camelize(:lower), send(k.underscore)))
+            node_value = send(k.underscore)
+            node.add_child(wrap_xml(k.camelize(:lower), node_value)) unless node_value.nil?
           else
             o = send(k.underscore)
-            unless o.nil?
-              node.add_child(o.to_xml().root)
-            else
-              node.add_child(wrap_xml(k.camelize(:lower)))
-            end
+            node.add_child(o.to_xml().root) unless o.nil?
           end
         end
       end
@@ -438,11 +436,12 @@ module Saasu
           post = Net::HTTP::Post.new(uri.request_uri)
 
           doc = Nokogiri::XML::Document.new
-          node = doc.add_child("<task>")
+          node = doc.add_child("<tasks>")
           node.add_child("<#{options[:task].to_s + klass_name.camelize} />")
           node.child.add_child(options[:entity].to_xml.root)
 
           post.body = doc.to_xml(:encoding => "utf-8")
+          post["Content-Type"] = "text/xml"
 
           xml = Nokogiri.XML(http.request(post).body)
 
@@ -549,7 +548,7 @@ module Saasu
         end
 
         def url_encode_hash(hash = {})
-          hash.map { |k, v| "#{k.to_s.gsub(/_/, "")}=#{(v.is_a? Date) ? v.to_saasu_iso8601 : v}"}.join("&")
+          hash.map { |k, v| "#{k.to_s.gsub(/_/, "")}=#{(v.is_a? Date) ? v.to_saasu_iso8601 : v}".gsub(" ", "+")}.join("&")
         end
         
         def request_path(options = {}, all = true)
