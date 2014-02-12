@@ -263,12 +263,12 @@ module Saasu
         new(xml.root)
       end
 
-      def insert(entity)
-        post({ :entity => entity, :task => :insert })
+      def insert(entities, attributes = {})
+        post({ :entities => entities, :task => :insert, :attributes => attributes })
       end
 
-      def update(entity)
-        post({ :entity => entity, :task => :update })
+      def update(entities, attributes = {})
+        post({ :entities => entities, :task => :update, :attributes => attributes })
       end
 
       def delete(uid)
@@ -437,8 +437,12 @@ module Saasu
 
           doc = Nokogiri::XML::Document.new
           node = doc.add_child("<tasks>")
-          node.add_child("<#{options[:task].to_s + klass_name.camelize} />")
-          node.child.add_child(options[:entity].to_xml.root)
+
+          base_node = Nokogiri::XML::Node.new(options[:task].to_s + klass_name.camelize, doc)
+          (options[:attributes] || {}).each {|key, value| base_node[key] = value}
+          node.add_child(base_node)
+
+          (options[:entities] || []).each {|e| node.child.add_child(e.to_xml.root)}
 
           post.body = doc.to_xml(:encoding => "utf-8")
           post["Content-Type"] = "text/xml"
