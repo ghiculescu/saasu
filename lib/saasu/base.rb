@@ -442,7 +442,7 @@ module Saasu
           (options[:attributes] || {}).each {|key, value| base_node[key] = value}
           node.add_child(base_node)
 
-          (options[:entities] || []).each {|e| node.child.add_child(e.to_xml.root)}
+          Array(options[:entities] || []).each {|e| node.child.add_child(e.to_xml.root)}
 
           post.body = doc.to_xml(:encoding => "utf-8")
           post["Content-Type"] = "text/xml"
